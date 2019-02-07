@@ -1,5 +1,5 @@
 """
-Class to help creating a source detection pipeline with sep
+Class to help building a source detection pipeline with sep
 by creating 'steps' with different configurations. 
 """
 import os
