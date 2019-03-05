@@ -15,7 +15,7 @@ from .utils import check_kwargs_defaults, check_random_state
 from .log import logger
 
 
-__all__ = ['StepperBase', 'LsstStepper']
+__all__ = ['StepperBase', 'LegacyStepper', 'LsstStepper']
           
 
 def _byteswap(arr):
@@ -84,29 +84,29 @@ class StepperBase(object):
         sources = sources[flux > 0]
         flux = flux[flux > 0]
 
-        mag_auto = utils.zpt - 2.5*np.log10(flux)
+        mag_auto = self.zpt - 2.5*np.log10(flux)
         r, flag = sep.flux_radius(
             img, sources['x'], sources['y'], 6.*sources['a'], 0.5,
             normflux=flux, subpix=5, mask=mask)
 
         sources['mag_auto'] = mag_auto
         sources['flux_auto'] = flux
-        sources['flux_radius'] = r * utils.pixscale
+        sources['flux_radius'] = r * self.pixscale
 
         # approximate fwhm 
         r_squared = sources['a']**2 + sources['b']**2
-        sources['fwhm'] = 2 * np.sqrt(np.log(2) * r_squared) *  utils.pixscale
+        sources['fwhm'] = 2 * np.sqrt(np.log(2) * r_squared) *  self.pixscale
         
         q = sources['b'] / sources['a']
         area = np.pi * q * sources['flux_radius']**2
         sources['mu_ave_auto'] = sources['mag_auto']  + 2.5 * np.log10(2*area)
         
-        area_arcsec = np.pi * (self.psf_fwhm/2)**2 * utils.pixscale**2
+        area_arcsec = np.pi * (self.psf_fwhm/2)**2 * self.pixscale**2
         flux, fluxerr, flag = sep.sum_circle(
             img, sources['x'], sources['y'], self.psf_fwhm/2, 
             subpix=5, mask=mask)
         flux[flux<=0] = np.nan
-        mu_0 = utils.zpt - 2.5*np.log10(flux / area_arcsec)
+        mu_0 = self.zpt - 2.5*np.log10(flux / area_arcsec)
 
         sources['mu_0_aper'] = mu_0
 
@@ -150,7 +150,7 @@ class StepperBase(object):
         num_fwhm = sep_extract_kws.pop('filter_num_fwhm', 1)
         kernel_fwhm = self.psf_fwhm * num_fwhm
         logger.info('smoothing with kernel with fwhm = {:.2f} arcsec'.\
-                    format(kernel_fwhm * utils.pixscale))
+                    format(kernel_fwhm * self.pixscale))
         kern = Gaussian2DKernel(kernel_fwhm * gaussian_fwhm_to_sigma, 
                                 mode='oversample')
         kern.normalize()
@@ -182,8 +182,31 @@ class StepperBase(object):
 
 class LsstStepper(StepperBase):
 
+    zpt = 27.0
+    pixscale = 0.168
+
     def setup_image(self, exposure, random_state=None):
         self.image = exposure.getImage().getArray()
         self.psf_fwhm = utils.get_psf_sigma(exposure) * gaussian_sigma_to_fwhm
         self.noise_image =  utils.make_noise_image(exposure.getMaskedImage(), 
                                                     random_state)
+
+
+class LegacyStepper(StepperBase):
+
+    zpt = 22.5
+    pixscale = 0.262
+
+    def setup_image(self, brick, random_state=None):
+        self.brick = brick
+        self.image = brick.image
+        self.psf_fwhm = brick.psfsize_g / self.pixscale
+        self.noise_image = 0.0
+
+
+class LbcStepper(StepperBase):
+
+    pixscale = 0.2255
+
+    def __init__(self, zpt):
+        pass

@@ -5,3 +5,5 @@ try:
     LSST_INSTALLED = True
 except ImportError:
     LSST_INSTALLED = False
+
+from .stepper import *

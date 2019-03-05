@@ -1,17 +1,15 @@
+extract_pixstack: 600000
+
 point_sources:
-    extract_pixstack: 600000
-    sep_point_sources:
-        min_radius: 1.5 # arcsec
-        mask_grow: 3
-        do_measure: True
-        sep_extract_kws:
-            thresh: 2
-            minarea: 10
-            deblend_cont: 0.001
-            filter_num_fwhm: 1.0
-        sep_back_kws:
-            bw: 64
-            bh: 64
-            fw: 3
-            fh: 3
-            fthresh: 0.0
+    do_measure: True
+    sep_extract_kws:
+        thresh: 5
+        minarea: 10
+        deblend_cont: 0.001
+        filter_num_fwhm: 1.0
+    sep_back_kws:
+        bw: 128
+        bh: 128
+        fw: 3
+        fh: 3
+        fthresh: 0.0
