@@ -7,3 +7,4 @@ except ImportError:
     LSST_INSTALLED = False
 
 from .stepper import *
+from .masks import sep_ellipse_mask
