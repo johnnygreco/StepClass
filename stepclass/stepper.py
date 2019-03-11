@@ -172,7 +172,10 @@ class StepperBase(object):
         logger.info('found {} sources'.format(len(sources)))
 
         if kws['do_measure']:
+            num_src = len(sources)
             sources = self._measure(img, sources, mask)
+            logger.info('lost {} sources during measurement'.\
+                        format(num_src - len(sources)))
 
         sources['seg_label'] = np.arange(1, len(sources) + 1)
         self.sources[step_name] = sources
