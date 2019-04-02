@@ -15,7 +15,8 @@ from .utils import check_kwargs_defaults, check_random_state
 from .log import logger
 
 
-__all__ = ['StepperBase', 'LegacyStepper', 'LsstStepper', 'LbcStepper']
+__all__ = ['StepperBase', 'LegacyStepper', 'LsstStepper', 
+           'LbcStepper', 'HscStepper']
           
 
 def _byteswap(arr):
@@ -213,6 +214,17 @@ class LbcStepper(StepperBase):
 
     def setup_image(self, image, zpt, psf_fhwm):
         self.zpt = zpt
+        self.image = image
+        self.psf_fwhm = psf_fhwm
+        self.noise_image = 0.0
+
+
+class HscStepper(StepperBase):
+
+    pixscale = 0.168
+    zpt = 27.0
+
+    def setup_image(self, image, psf_fhwm):
         self.image = image
         self.psf_fwhm = psf_fhwm
         self.noise_image = 0.0

@@ -7,6 +7,8 @@ import os
 import numpy as np
 import yaml
 from astropy.table import Table
+from astropy.modeling import models, fitting
+from astropy.stats import gaussian_fwhm_to_sigma
 from collections import namedtuple
 
 project_dir = os.path.dirname(os.path.dirname(__file__))
@@ -102,3 +104,31 @@ def check_kwargs_defaults(kwargs, defaults):
     for k, v in kwargs.items():
         kw[k] = v
     return kw
+
+
+def measure_psf_fwhm(psf, fwhm_guess):
+    """
+    Fit a 2D Gaussian to observed psf to estimate the FWHM
+
+    Parameters
+    ----------
+    psf : ndarray
+        Observed psf
+    fwhm_guess : float
+        Guess for fwhm in pixels
+
+    Returns
+    -------
+    mean_fwhm : float
+        Mean x & y FWHM
+    """
+    sigma = fwhm_guess * gaussian_fwhm_to_sigma
+    g_init = models.Gaussian2D(psf.max()*0.3,
+                               psf.shape[1]/2,
+                               psf.shape[0]/2,
+                               sigma)
+    fit_g = fitting.LevMarLSQFitter()
+    xx, yy = np.meshgrid(np.arange(psf.shape[1]), np.arange(psf.shape[0]))
+    best_fit = fit_g(g_init, xx, yy, psf)
+    mean_fwhm = np.mean([best_fit.x_fwhm, best_fit.y_fwhm])
+    return mean_fwhm
