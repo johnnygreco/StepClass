@@ -39,7 +39,9 @@ class StepperBase(object):
 
     SEP_BACK_DEFAULTS = dict(bw=64, bh=64, fw=3, fh=3, fthresh=0.0)
 
-    def __init__(self, config_fn=None, config={}):
+    def __init__(self, config_fn=None, config={}, log_level='info'):
+
+        logger._set_defaults(level=log_level.upper())
 
         if config_fn is not None:
             config = utils.read_config(config_fn)
