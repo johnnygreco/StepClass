@@ -49,7 +49,7 @@ class StepperBase(object):
         self.extract_pixstack = config.pop('extract_pixstack', 300000)
         sep.set_extract_pixstack(self.extract_pixstack)
 
-        self.step_kws = config
+        self.config= config
         self.sources = {}
          
     def setup_image(self, image_object, **kwargs):
@@ -133,7 +133,8 @@ class StepperBase(object):
 
         logger.info('running ' + step_name)
 
-        kws = self.step_kws[step_name].copy()
+        kws = self.config[step_name].copy()
+        thresh_type = kws.pop('thresh_type', 'stddev')
 
         sep_extract_kws = kws.pop('sep_extract_kws', {})
         sep_extract_kws = check_kwargs_defaults(sep_extract_kws,
@@ -164,10 +165,18 @@ class StepperBase(object):
         img_sub = img - bkg
 
         # extract sources
-        logger.info('detecting with a threshold of {} x background'.\
-                    format(sep_extract_kws['thresh']))
+        if thresh_type == 'stddev':
+            logger.info('detecting with a threshold of {} x background'.\
+                        format(sep_extract_kws['thresh']))
+            err = bkg.rms()
+        elif thresh_type ==  'absolute':
+            logger.info('detecting with absolute pixel value of {}'.\
+                        format(sep_extract_kws['thresh']))
+            err = None
+        else:
+            raise Exception(self.thresh_type + ' is not a valid thresh type')
         sources, segmap =  sep.extract(
-            img_sub, err=bkg.rms(), segmentation_map=True, **sep_extract_kws)
+            img_sub, err=err, segmentation_map=True, **sep_extract_kws)
 
         sources = Table(sources)
         sources = sources[sources['flux'] > 0]
@@ -216,7 +225,7 @@ class LbcStepper(StepperBase):
 
     def setup_image(self, image, zpt, psf_fhwm):
         self.zpt = zpt
-        self.image = image
+        self.image = _byteswap(image)
         self.psf_fwhm = psf_fhwm
         self.noise_image = 0.0
 
