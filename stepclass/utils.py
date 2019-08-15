@@ -27,7 +27,7 @@ def read_config(fn):
     Parse hugs pipeline configuration file.
     """
     with open(fn, 'r') as f:
-        config_params = yaml.load(f)
+        config_params = yaml.load(f, Loader=yaml.FullLoader)
     return config_params
 
 
